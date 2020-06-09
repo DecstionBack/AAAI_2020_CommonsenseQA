@@ -429,7 +429,7 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length,
                 tokens_choice.extend(evidence_tokens)
                 tokens_choice.extend(tokenizer.tokenize('##'))
 
-                # update the start and end index of each argument in
+                # update the start and end index of each argument
                 for item in evidence2arguments[' '.join(key)]:
                     start = words2tokens[item[1]][0] + origin_length
                     end = words2tokens[item[2]][1] + origin_length

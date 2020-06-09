@@ -22,7 +22,7 @@ CUDA_VISIBLE_DEVICES=0,1 python run.py \
 --per_gpu_train_batch_size 2 \
 --gradient_accumulation_steps 1 \
 --warmup_steps 0 \
---per_gpu_eval_batch_size 32 \
+--per_gpu_eval_batch_size 4 \
 --learning_rate 5e-6 \
 --adam_epsilon 1e-6 \
 --weight_decay 0 \
