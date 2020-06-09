@@ -153,9 +153,6 @@ def read_examples(input_file, is_training):
     examples=[]
     with open(input_file+'.concept') as f1,open(input_file+'_NL') as f2 , open(input_file+'.wikigraphnew') as f3:
         for line,line2,line3 in zip(f1,f2,f3):
-            # select 10 examples for test
-            #if cont>0:
-            #    break
             if cont%1000==0:
                 logger.info('read cont:{}'.format(cont))
 
@@ -275,8 +272,7 @@ def read_examples(input_file, is_training):
 
 
                 # Add Wiki-Graph triple nodes
-                # sentence_number
-                # 10个句子，每个句子包含哪些三元组
+                # 10 sentences, one sentence contains which triples
                 srl_triples_index = [[] for i in range(len(wiki_evidences))]
 
                 index = 0
@@ -293,7 +289,6 @@ def read_examples(input_file, is_training):
 
                     # for triple, verb, evidence in zip(srl_triples, srl_verbs, wiki_evidences):
                     for verb in srl_verbs:
-                        # print(verb)
                         if len(verb) == 0:
                             continue
                         text = verb['description']
@@ -308,10 +303,6 @@ def read_examples(input_file, is_training):
                         # add nodes and edges
                         if text not in evidence2arguments:
                             evidence2arguments[text] = []
-                        # print(text)
-                        # print(verb['tags'])
-                        # res = re.findall(r"\[ARG0:(.*?)\]", verb['description'])
-                        # print(res)
 
                         tags = verb['tags']
                         if not ('B-ARG0' in tags and 'B-V' in tags and 'B-ARG1' in tags):
@@ -350,14 +341,11 @@ def read_examples(input_file, is_training):
                                 break
                         # print('ARG1 {} {}'.format(text[start:end+1],start, end))
                         evidence2arguments[' '.join(text)].append([' '.join(text[start:end + 1]), start, end])
-                    # if ' '.join(text) in evidence2arguments:
-                    #     print(evidence2arguments[' '.join(text)])
                 qa_list.append(([temp['text'],'##'.join(t),'##'.join([temp2['text']] + t1),sorted_wiki_adj,evidence2arguments]))
 
                 # node_lists contains the nodes in ConceptNet
                 # adj_matrix_lists contains the adjacent matrix of Wiki-Graph
                 node_lists.append(sorted_node)
-                # adj_matrix_lists.append(sorted_adj_matrix) Emmm... This is a bug... DOES NOT transfer the matrix at all....
                 adj_matrix_lists.append(sorted_wiki_adj)
 
             cont+=1
@@ -437,12 +425,11 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length,
                 if len(tokens_choice) + len(evidence_tokens) > 256 - len(ending_tokens) - 3 - 2: # 2 for ##
                     break
 
-                # print('tokens choice:{}'.format(len(tokens_choice)))
                 origin_length = len(tokens_choice)
                 tokens_choice.extend(evidence_tokens)
                 tokens_choice.extend(tokenizer.tokenize('##'))
 
-                # 更新原先evidence2arguments中每个argument存储的start与end
+                # update the start and end index of each argument in
                 for item in evidence2arguments[' '.join(key)]:
                     start = words2tokens[item[1]][0] + origin_length
                     end = words2tokens[item[2]][1] + origin_length
@@ -455,7 +442,7 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length,
             tokens = tokens_choice
             segment_ids = [0] * (len(tokens) - len(ending_tokens) - 2) + [1] * (len(ending_tokens) + 1)+[2]
             input_ids = tokenizer.convert_tokens_to_ids(tokens)
-            #padding补在前面，需要对位置进行移动更改
+            #update the index because padding is at the beginning of the input
             padding_length = max_seq_length - len(input_ids)
             for node in wiki_nodes_choice:
                 node[1] += padding_length
@@ -499,10 +486,6 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length,
             skip=len(temp[0].split())+5
             temp = temp[1]
 
-            # temp=temp.split(' 4 ')[0] # 4: <sep>
-            # temp=' '.join(temp).split('7967 7967')
-            # temp=[len(x.split()) for x in temp]
-
             for item in wiki_nodes_choice:
                 vector = np.zeros(max_seq_length)
                 for temp in range(item[1], item[2]):
@@ -521,25 +504,6 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length,
                 for idx2, node2 in enumerate(wiki_nodes_choice):
                     if node1[0].lower() == node2[0].lower() and idx1<100 and idx2<100 and idx1<node_size and idx2<node_size :
                         matrix[idx1+50, idx2+50] = 1
-                        # Directed or Undirected
-
-            # for t in temp:
-            #     vector=np.zeros(max_seq_length)
-            #     vector[skip:t+skip]=1
-            #     skip+=t+2
-            #     node.append(vector[None,:])
-            # node=node[:100]
-            # for i in range(100-len(node)):
-            #     vector=np.zeros(max_seq_length)
-            #     node.append(vector[None,:])
-            # node=np.concatenate(node,0)
-            # node_size=len(temp)-1
-            # for i,val in enumerate(ending[-1]):
-            #     for j,v in enumerate(ending[-1][i]):
-            #         if v==1 and i<50 and j<50 and i<node_size and j<node_size:
-            #             matrix[i+50,j+50]=1
-            # print(len(input_ids))
-
 
             assert len(input_ids) == max_seq_length
             assert len(input_mask) == max_seq_length
@@ -731,7 +695,6 @@ def main():
     tokenizer = XLNetTokenizer.from_pretrained(args.model_name_or_path, do_lower_case=args.do_lower_case)
     config = XLNetConfig.from_pretrained(args.model_name_or_path, num_labels=5)
     # Prepare model
-    
     model = XLNetForMultipleChoice.from_pretrained(args.model_name_or_path,args,config=config)
 
 
@@ -754,7 +717,6 @@ def main():
     if args.do_train:
 
         # Prepare data loader
-
         train_examples = read_examples(os.path.join(args.data_dir, 'train.jsonl'), is_training = True)
         train_features = convert_examples_to_features(
             train_examples, tokenizer, args.max_seq_length, True)
@@ -776,7 +738,6 @@ def main():
 
 
         # Prepare optimizer
-
         param_optimizer = list(model.named_parameters())
 
         # hack to remove pooler, which is not used
@@ -895,8 +856,6 @@ def main():
                         logits = logits.detach().cpu().numpy()
                         label_ids = label_ids.to('cpu').numpy()
                         tmp_eval_accuracy = accuracy(logits, label_ids)
-                        #if nb_eval_steps==0:
-                        #    print(logits)
                         inference_labels.append(np.argmax(logits, axis=1))
                         gold_labels.append(label_ids)
                         eval_loss += tmp_eval_loss.mean().item()
