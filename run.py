@@ -244,7 +244,6 @@ def read_examples(input_file, is_training):
                             if i<k and j<k:
                                 # construct a directed graph.
                                 g.addEdge(i,j)
-                                # what does wiki_adj mean?
                                 wiki_adj[i][j]=1
                                 wiki_adj[j][i]=1
                 wiki_evidences=[]
