@@ -5,7 +5,7 @@ Graph-Based Reasoning over Heterogeneous External Knowledge for Commonsense Ques
 - python >=3.0
 
 # Data download
-You can download the [AAAI2020-data.tar.gz](https://1drv.ms/u/s!AlDIAan0xkG1mSW62rHpQzUAEQpA?e=nImOgo) file used in this paper and extract it as `data` folder.
+You can download the [AAAI2020-data.tar.gz](https://1drv.ms/u/s!AlDIAan0xkG1oEstTFs45BD2JQZA?e=KQ8Pok) file used in this paper and extract it as `data` folder.
 
 # Training, evaluation and test
 ```
